@@ -1,121 +1,70 @@
 # step2gltf
-Example program of how to convert ISO 10303 STEP files (AP203 and AP 214) to GLTF 2.0 using OpenCascade.
 
-## Dependencies
+Fork of [@s1mb1o/step2gltf](https://github.com/s1mb1o/step2gltf) - Program to convert ISO 10303 STEP files (AP203 and AP 214) to GLTF 2.0 using OpenCascade.
 
-You need OpenCascade 7.4.1.dev with RapidJSON.
+For complete documentation, specifications and implementation details, see the [original repository](https://github.com/s1mb1o/step2gltf).
 
-## Compiling
+## Installation
 
-### Prepare on Astra Linux
+### Install dependencies
 
+```bash
+sudo apt-get update && \
+sudo apt-get install -y --no-install-recommends \
+    build-essential cmake wget git \
+    ca-certificates libcurl4 libuv1 \
+    libfreetype6-dev tcl-dev tk-dev \
+    libxmu-dev libxi-dev libgl1-mesa-dev xorg-dev \
+    rapidjson-dev
 ```
-sudo apt-get install ca-certificates \
-    libcurl3 libuv1 cmake \
-    libfreetype6-dev \
-    tcl-dev tk-dev \
-    libxmu-dev libxi-dev
-```
 
-### Compiling RapidJSON from source:
+### Install OpenCascade 7.9.1
 
-To compile from source (on OSX make sure to use gcc, not clang):
-
-```
-git clone https://github.com/Tencent/rapidjson.git
-cd rapidjson
-git checkout 8f4c021fa2f1e001d2376095928fc0532adf2ae6
+```bash
+wget https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_9_1.tar.gz
+tar -xf V7_9_1.tar.gz
+cd OCCT-7_9_1
 mkdir build
 cd build
-cmake ..
-sudo make install
+cmake .. \
+      -DUSE_RAPIDJSON=ON \
+      -DBUILD_MODULE_Visualization=ON \
+      -DBUILD_MODULE_Draw=OFF \
+      -DBUILD_MODULE_DataExchange=ON \
+      -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc) install
 ```
 
+### Configure system libraries
 
-### Compiling OpenCascade from source:
+To avoid having to specify `LD_LIBRARY_PATH` every time:
 
-Required latest OpenCascade sources, otherwise there will be
-no RWGltf_CafWriter class.
-
-To compile from source (on OSX make sure to use gcc, not clang):
-
-```
-git clone https://git.dev.opencascade.org/repos/occt.git
-cd occt
-git checkout 1e1b83c07b17144447e9e8b104ad0682655310db
-mkdir build
-cd build
-cmake .. -DUSE_RAPIDJSON:BOOL=ON
-sudo make install
+```bash
+echo '/usr/local/lib' | sudo tee /etc/ld.so.conf.d/opencascade.conf
+sudo ldconfig
 ```
 
-To compile **static** from source (on OSX make sure to use gcc, not clang):
-```
-git clone https://git.dev.opencascade.org/repos/occt.git
-cd occt
-git checkout 1e1b83c07b17144447e9e8b104ad0682655310db
-mkdir build
-cd build
-cmake .. -DUSE_RAPIDJSON:BOOL=ON -DBUILD_LIBRARY_TYPE:String=Static
-sudo make install
-```
+### Compile step2gltf
 
-
-### Compiling step2gltf
-
-To compile from source on OSX:
-```
+```bash
 make
 ```
 
-## Running
+## Usage
 
-Once you have compiled it,
-just use it as:
-
-```
+```bash
 step2gltf STEPFILENAME GLTFFILENAME
 ```
 
-File extension defines glTF 2.0 variant:
- - ".gltf" - glTF with base64 binary resourses embedded in JSON.
- - ".glb"  - binary glTF.
+Supported extensions:
 
-You may also need to specify LD_LIBRARY_PATH to run on Astra Linux
-```
-LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH step2gltf STEPFILENAME GLTFFILENAME
-```
+- `.gltf` - glTF with binary resources embedded in JSON (base64)
+- `.glb` - Binary glTF
 
-## Validating
+## Changes made in this fork
 
-https://github.khronos.org/glTF-Validator/
-
-Binary glTF shall have \*.glb extension.
-
-## Rendering gLTF
-
-Open https://gltf-viewer.donmccurdy.com and upload result file.
-
-## GLTF 2.0 Specification
-
-https://github.com/KhronosGroup/glTF/blob/master/README.md
-
-# Implementation Details
-
-## Meshing algorithm
-
-The algorithm of shape triangulation is provided by the functionality of BRepMesh_IncrementalMesh class, which adds a triangulation of the shape to its topological data structure. This triangulation is used to visualize the shape in shaded mode.
-
-![Deflection parameters of BRepMesh_IncrementalMesh algorithm](https://www.opencascade.com/doc/occt-7.1.0/overview/html/modeling_algos_image056.png)
-
-Linear deflection limits the distance between triangles and the face interior.
-
-![Linear deflection](https://www.opencascade.com/doc/occt-7.1.0/overview/html/modeling_algos_image057.png)
-
-Note that if a given value of linear deflection is less than shape tolerance then the algorithm will skip this value and will take into account the shape tolerance.
-
-The application should provide deflection parameters to compute a satisfactory mesh. Angular deflection is relatively simple and allows using a default value (12-20 degrees). Linear deflection has an absolute meaning and the application should provide the correct value for its models. Giving small values may result in a too huge mesh (consuming a lot of memory, which results in a long computation time and slow rendering) while big values result in an ugly mesh.
-
-For an application working in dimensions known in advance it can be reasonable to use the absolute linear deflection for all models. This provides meshes according to metrics and precision used in the application (for example, it it is known that the model will be stored in meters, 0.004 m is enough for most tasks).
-
-Source: https://www.opencascade.com/doc/occt-7.1.0/overview/html/occt_user_guides__modeling_algos.html#occt_modalg_11_2
+- Updated for OpenCascade 7.9.1
+- Code changes for compatibility:
+  - `#include <Message_ProgressIndicator.hxx>` → `#include <Message_ProgressRange.hxx>`
+  - `Message_ProgressIndicator(100)` → `Message_ProgressRange()`
+  - Makefile libraries update (added `-lTKDEGLTF`, removed `-lTKRWGltf`)
