@@ -4,9 +4,36 @@ Fork of [@s1mb1o/step2gltf](https://github.com/s1mb1o/step2gltf) - Program to co
 
 For complete documentation, specifications and implementation details, see the [original repository](https://github.com/s1mb1o/step2gltf).
 
-## Installation
+## Installation & Usage
 
-### Install dependencies
+### Docker (Recommended)
+
+The easiest way to use step2gltf is with Docker.
+
+#### Build the Docker image
+
+```bash
+docker build -t step2gltf .
+```
+
+#### Run with Docker
+
+```bash
+# Show help
+docker run --rm step2gltf
+
+# Convert files (mount current directory)
+docker run --rm -v $(pwd):/workspace step2gltf input.step output.gltf
+
+# Example with sample
+docker run --rm -v $(pwd):/workspace step2gltf samples/piggy.step piggy.glb
+```
+
+### Native Installation
+
+If you prefer to compile and install natively, follow these steps:
+
+#### Install dependencies
 
 ```bash
 sudo apt-get update && \
@@ -18,7 +45,7 @@ sudo apt-get install -y --no-install-recommends \
     rapidjson-dev
 ```
 
-### Install OpenCascade 7.9.1
+#### Install OpenCascade 7.9.1
 
 ```bash
 wget https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_9_1.tar.gz
@@ -35,7 +62,7 @@ cmake .. \
 make -j$(nproc) install
 ```
 
-### Configure system libraries
+#### Configure system libraries
 
 To avoid having to specify `LD_LIBRARY_PATH` every time:
 
@@ -44,19 +71,19 @@ echo '/usr/local/lib' | sudo tee /etc/ld.so.conf.d/opencascade.conf
 sudo ldconfig
 ```
 
-### Compile step2gltf
+#### Compile step2gltf
 
 ```bash
 make
 ```
 
-## Usage
+#### Usage
 
 ```bash
 step2gltf STEPFILENAME GLTFFILENAME
 ```
 
-Supported extensions:
+## Supported Extensions
 
 - `.gltf` - glTF with binary resources embedded in JSON (base64)
 - `.glb` - Binary glTF

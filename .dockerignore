@@ -1,0 +1,25 @@
+# Git files
+.git
+.gitignore
+
+# Build artifacts
+*.o
+step2gltf
+debug/
+release/
+profile/
+
+# Documentation and packaging
+README.md
+LICENSE
+debian/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.bak
