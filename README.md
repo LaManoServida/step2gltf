@@ -14,6 +14,9 @@ The easiest way to use step2gltf is with Docker.
 
 ```bash
 docker build -t step2gltf .
+
+# If you have permission issues with mounted volumes (non-1000:1000 user):
+docker build --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) -t step2gltf .
 ```
 
 #### Run with Docker

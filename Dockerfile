@@ -53,6 +53,10 @@ RUN echo '/usr/local/lib' > /etc/ld.so.conf.d/opencascade.conf \
 # Runtime stage
 FROM debian:12-slim AS runtime
 
+# Build arguments for user/group IDs (defaults to 1000:1000)
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
 # Install only runtime dependencies (no build tools)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6 \
@@ -80,11 +84,11 @@ RUN echo '/usr/local/lib' > /etc/ld.so.conf.d/opencascade.conf \
     && ldconfig \
     && chmod +x /usr/local/bin/step2gltf
 
-# Create a non-root user with UID/GID 1000
-RUN groupadd -g 1000 step2gltf && useradd -u 1000 -g 1000 -m step2gltf
+# Create a non-root user with customizable UID/GID
+RUN groupadd -g ${GROUP_ID} step2gltf && useradd -u ${USER_ID} -g ${GROUP_ID} -m step2gltf
 
 # Create working directory for input/output files and set ownership
-RUN mkdir -p /workspace && chown 1000:1000 /workspace
+RUN mkdir -p /workspace && chown ${USER_ID}:${GROUP_ID} /workspace
 
 # Switch to non-root user
 USER step2gltf
