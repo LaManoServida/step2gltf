@@ -1,6 +1,7 @@
-FROM debian:12-slim
+# Build stage
+FROM debian:12-slim AS builder
 
-# Install build and runtime dependencies
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
@@ -18,7 +19,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libexpat1-dev \
     libpng-dev \
     zlib1g-dev \
-    libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -45,17 +45,43 @@ RUN wget https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_9_1.tar.g
 COPY . /build/step2gltf
 WORKDIR /build/step2gltf
 
-# Build step2gltf (dynamic linking for simplicity)
+# Build step2gltf (dynamic linking)
 RUN echo '/usr/local/lib' > /etc/ld.so.conf.d/opencascade.conf \
     && ldconfig \
     && make release
 
-# Create a non-root user with UID/GID 1000 (common for first user on many systems)
-RUN groupadd -g 1000 step2gltf && useradd -u 1000 -g 1000 -m step2gltf
+# Runtime stage
+FROM debian:12-slim AS runtime
 
-# Copy the binary to a standard location
-RUN cp /build/step2gltf/step2gltf /usr/local/bin/step2gltf \
+# Install only runtime dependencies (no build tools)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libfreetype6 \
+    tcl \
+    tk \
+    libgl1-mesa-glx \
+    libxmu6 \
+    libxi6 \
+    libfontconfig1 \
+    libexpat1 \
+    libpng16-16 \
+    zlib1g \
+    libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy OpenCascade libraries from builder stage
+COPY --from=builder /usr/local/lib /usr/local/lib
+COPY --from=builder /usr/local/include /usr/local/include
+
+# Copy the compiled binary from builder stage
+COPY --from=builder /build/step2gltf/step2gltf /usr/local/bin/step2gltf
+
+# Configure library path and make binary executable
+RUN echo '/usr/local/lib' > /etc/ld.so.conf.d/opencascade.conf \
+    && ldconfig \
     && chmod +x /usr/local/bin/step2gltf
+
+# Create a non-root user with UID/GID 1000
+RUN groupadd -g 1000 step2gltf && useradd -u 1000 -g 1000 -m step2gltf
 
 # Create working directory for input/output files and set ownership
 RUN mkdir -p /workspace && chown 1000:1000 /workspace
