@@ -50,12 +50,19 @@ RUN echo '/usr/local/lib' > /etc/ld.so.conf.d/opencascade.conf \
     && ldconfig \
     && make release
 
-# Create working directory for input/output files
-WORKDIR /workspace
+# Create a non-root user with UID/GID 1000 (common for first user on many systems)
+RUN groupadd -g 1000 step2gltf && useradd -u 1000 -g 1000 -m step2gltf
 
 # Copy the binary to a standard location
 RUN cp /build/step2gltf/step2gltf /usr/local/bin/step2gltf \
     && chmod +x /usr/local/bin/step2gltf
+
+# Create working directory for input/output files and set ownership
+RUN mkdir -p /workspace && chown 1000:1000 /workspace
+
+# Switch to non-root user
+USER step2gltf
+WORKDIR /workspace
 
 # Default command
 ENTRYPOINT ["/usr/local/bin/step2gltf"]
