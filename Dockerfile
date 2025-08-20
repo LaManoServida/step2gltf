@@ -1,4 +1,4 @@
-# Build stage
+# Build stage with patched STEP lexer for large files
 FROM debian:12-slim AS builder
 
 # Install build dependencies
@@ -28,10 +28,17 @@ WORKDIR /build
 ENV MMGT_OPT=1 \
     MMGT_CLEAR=0
 
-# Download and build OpenCascade 7.9.1
+# Download and extract OpenCascade 7.9.1
 RUN wget https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_9_1.tar.gz \
     && tar -xf V7_9_1.tar.gz \
-    && cd OCCT-7_9_1 \
+    && rm V7_9_1.tar.gz
+
+# Copy our patched lexer file to the correct location
+# The STEP lexer is in src/DataExchange/TKDESTEP/StepFile/
+COPY lex.step.cxx /build/OCCT-7_9_1/src/DataExchange/TKDESTEP/StepFile/
+
+# Build OpenCascade with patched lexer
+RUN cd OCCT-7_9_1 \
     && mkdir build \
     && cd build \
     && cmake .. \
