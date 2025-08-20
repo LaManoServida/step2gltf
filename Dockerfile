@@ -19,10 +19,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libexpat1-dev \
     libpng-dev \
     zlib1g-dev \
+    libtbb-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /build
+
+# Set OCCT Intel TBB optimized memory manager 
+ENV MMGT_OPT=2
 
 # Download and build OpenCascade 7.9.1
 RUN wget https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_9_1.tar.gz \
@@ -32,6 +36,7 @@ RUN wget https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_9_1.tar.g
     && cd build \
     && cmake .. \
     -DUSE_RAPIDJSON=ON \
+    -DUSE_TBB=ON \
     -DBUILD_MODULE_Visualization=ON \
     -DBUILD_MODULE_Draw=OFF \
     -DBUILD_MODULE_DataExchange=ON \
@@ -57,6 +62,9 @@ FROM debian:12-slim AS runtime
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 
+# Set OCCT Intel TBB optimized memory manager 
+ENV MMGT_OPT=2
+
 # Install only runtime dependencies (no build tools)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6 \
@@ -69,31 +77,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libexpat1 \
     libpng16-16 \
     zlib1g \
-    libstdc++6 \
+    libtbb12 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy OpenCascade libraries from builder stage
+# Copy OpenCascade libraries and headers
 COPY --from=builder /usr/local/lib /usr/local/lib
 COPY --from=builder /usr/local/include /usr/local/include
 
-# Copy the compiled binary from builder stage
+# Copy the built executable
 COPY --from=builder /build/step2gltf/step2gltf /usr/local/bin/step2gltf
 
-# Configure library path and make binary executable
+# Configure library path and make executable
 RUN echo '/usr/local/lib' > /etc/ld.so.conf.d/opencascade.conf \
     && ldconfig \
     && chmod +x /usr/local/bin/step2gltf
 
-# Create a non-root user with customizable UID/GID
+# Create user and group with specified IDs
 RUN groupadd -g ${GROUP_ID} step2gltf && useradd -u ${USER_ID} -g ${GROUP_ID} -m step2gltf
 
-# Create working directory for input/output files and set ownership
+# Create workspace directory
 RUN mkdir -p /workspace && chown ${USER_ID}:${GROUP_ID} /workspace
 
-# Switch to non-root user
-USER step2gltf
+# Set working directory and user
 WORKDIR /workspace
+USER step2gltf
 
-# Default command
+# Set the default command
 ENTRYPOINT ["/usr/local/bin/step2gltf"]
 CMD ["--help"]
