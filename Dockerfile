@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libexpat1-dev \
     libpng-dev \
     zlib1g-dev \
+    libjemalloc-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -31,8 +32,8 @@ RUN wget https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_9_1.tar.g
     && mkdir build \
     && cd build \
     && cmake .. \
+    -DUSE_MMGR_TYPE=JEMALLOC \
     -DUSE_RAPIDJSON=ON \
-    -DBUILD_MODULE_Visualization=ON \
     -DBUILD_MODULE_Draw=OFF \
     -DBUILD_MODULE_DataExchange=ON \
     -DCMAKE_BUILD_TYPE=Release \
