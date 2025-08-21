@@ -91,10 +91,6 @@ step2gltf STEPFILENAME GLTFFILENAME
 - `.gltf` - glTF with binary resources embedded in JSON (base64)
 - `.glb` - Binary glTF
 
-## Changes made in this fork
+## License
 
-- Updated for OpenCascade 7.9.1
-- Code changes for compatibility:
-  - `#include <Message_ProgressIndicator.hxx>` → `#include <Message_ProgressRange.hxx>`
-  - `Message_ProgressIndicator(100)` → `Message_ProgressRange()`
-  - Makefile libraries update (added `-lTKDEGLTF`, removed `-lTKRWGltf`)
+This fork is MIT licensed. Note that it depends on OpenCascade, which is LGPL v2.1.
