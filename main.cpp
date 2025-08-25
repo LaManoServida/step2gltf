@@ -44,7 +44,7 @@ static const char* errorInvalidOutExtension = "output filename shall have .glTF 
 /// @}
 
 /// Transcode STEP to glTF
-static int step2stl(char *in, char *out)
+static int step2gltf(char *in, char *out)
 {
     Standard_Boolean gltfIsBinary = Standard_False;
 
@@ -135,10 +135,10 @@ static int step2stl(char *in, char *out)
 
 static void show_usage(const char* app)
 {
-    std::cerr << "stl2gltf - A tool to convert STEP to glTF with OpenCascade" << std::endl;
+    std::cerr << "step2gltf - A tool to convert STEP to glTF with OpenCascade" << std::endl;
     std::cerr << std::endl;
     std::cerr << "Usage:" << std::endl;
-    std::cerr << "    stl2gltf [OPTIONS] IN_STEP_FILE OUT_GLTF_FILE" << std::endl;
+    std::cerr << "    step2gltf [OPTIONS] IN_STEP_FILE OUT_GLTF_FILE" << std::endl;
     std::cerr << std::endl;
     std::cerr << "Options:" << std::endl;
     std::cerr << "    " << kLinearDeflection << "=FLOAT      Linear deflection (default: " << DefaultLinDeflection << ")" << std::endl;
@@ -220,5 +220,5 @@ Standard_Integer main (int argc, char *argv[])
         return 1;
     }
 
-    return step2stl(argv[argc-2], argv[argc-1]);
+    return step2gltf(argv[argc-2], argv[argc-1]);
 }
