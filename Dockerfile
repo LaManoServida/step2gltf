@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
     wget \
-    git \
     ca-certificates \
     libfreetype6-dev \
     tcl-dev \
